@@ -1,6 +1,7 @@
 <?php
 
 namespace Rengo;
+
 use Rengo\Driver\MongoDriver;
 use Rengo\Driver\RedisDriver;
 
@@ -29,7 +30,7 @@ class Storage {
      * @param $config
      * @return static
      */
-    public static function factory($name, $config=null) {
+    public static function factory($name, $keys=['_id'], $config=null) {
         if (!$config) {
             // Default config for fast deploy
             $config = [
@@ -48,7 +49,7 @@ class Storage {
                     ]
             ];
         }
-        $redis_driver = new RedisDriver($name, $config['redis']);
+        $redis_driver = new RedisDriver($name, $keys, $config['redis']);
         $mongo_driver = new MongoDriver($name, $config['mongo']);
         return new static($redis_driver, $mongo_driver);
     }
@@ -67,10 +68,14 @@ class Storage {
      * @return mixed
      */
     public function find($query) {
-        $result = $this->primary->get($query);
+        $result = $this->redis->getAll($query);
         if (!$result) {
-            $result = $this->secondary->get($query);
+            $result = $this->mongo->get($query);
         }
         return $result;
+    }
+
+    public function flush() {
+        $this->redis->flushall();
     }
 }

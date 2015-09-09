@@ -14,7 +14,11 @@ class StorageTest extends \PHPUnit_Framework_TestCase {
     public $storage;
 
     public function setUp() {
-        $this->storage = Storage::factory('test-rengo');
+        $this->storage = Storage::factory('test-rengo', ['unit_id']);
+    }
+
+    public function testFlushAll() {
+        $this->storage->flush();
     }
 
     public function testGetCacher() {
@@ -23,27 +27,30 @@ class StorageTest extends \PHPUnit_Framework_TestCase {
 
     public function testStoreData() {
         $one = $this->storage->insert([
-            '1' => 'one',
-            '2' => 'two',
-            '3' => 'three'
+            'one' => 'Test One',
+            'unit_id' => 'section_key',
+            'three' => '3213123432'
         ]);
 
         $two = $this->storage->insert([
-            'one' => '1',
-            'two' => '2',
-            'three' => '3'
+            'one' => 'Test Two',
+            'unit_id' => 'section_key',
+            'three' => new \MongoDate()
         ]);
 
         $this->assertTrue($one && $two);
     }
 
     public function testGetData() {
-        $result = $this->storage->find(['1' => 'one']);
+        $result = $this->storage->find(['unit_id' => 'section_key']);
+        $this->assertEquals(2, count($result));
+    }
 
-        $this->assertEquals([
-            '1' => 'one',
-            '2' => 'two',
-            '3' => 'three'], $result);
+    public function testQuery() {
+        $result = $this->storage->find([
+            'unit_id' => 'section_key',
+            'message' => 'hello'
+        ]);
     }
 
     public function testOk() {
